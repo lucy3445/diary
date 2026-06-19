@@ -1,0 +1,130 @@
+/* ───────────────────────────────────────────────
+   하루 — AI 코칭 일기앱  ·  Design tokens & base
+   ─────────────────────────────────────────────── */
+:root{
+  /* surfaces */
+  --bg:        #F1EBDF;   /* warm cream canvas */
+  --paper:     #FBF7EF;   /* card / sheet */
+  --paper-2:   #F6F0E4;   /* sunken panel */
+  --ink:       #33302B;   /* primary text */
+  --ink-2:     #6E685D;   /* secondary text */
+  --ink-3:     #A39B8C;   /* tertiary / hints */
+  --line:      rgba(51,48,43,0.09);
+  --line-2:    rgba(51,48,43,0.05);
+
+  /* brand */
+  --terra:     #C5613A;   /* terracotta — primary */
+  --terra-d:   #A84E2C;
+  --terra-soft:#F3DDD0;
+  --sage:      #7C8B6B;   /* sage green — secondary */
+  --sage-d:    #5F6E50;
+  --sage-soft: #E1E6D6;
+  --gold:      #C79A41;   /* warm gold — accent */
+  --gold-soft: #F0E3C4;
+
+  /* emotion palette */
+  --emo-joy:   #DDA53C;   /* 기쁨/뿌듯 */
+  --emo-calm:  #8AA086;   /* 평온 */
+  --emo-focus: #C5613A;   /* 몰입/열정 */
+  --emo-tired: #AE9F89;   /* 지침 */
+  --emo-anx:   #CA8A5E;   /* 불안/긴장 */
+  --emo-low:   #7E90A6;   /* 가라앉음/슬픔 */
+
+  --r-lg: 28px;
+  --r-md: 20px;
+  --r-sm: 14px;
+  --shadow-card: 0 1px 2px rgba(51,48,43,0.04), 0 8px 24px rgba(51,48,43,0.06);
+  --shadow-pop:  0 8px 16px rgba(51,48,43,0.10), 0 24px 48px rgba(51,48,43,0.14);
+
+  --sans: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+  --serif: "Noto Serif KR", "Nanum Myeongjo", serif;
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+
+.app-root{
+  font-family: var(--sans);
+  color: var(--ink);
+  height:100%;
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* the scrollable screen area inside the phone */
+.screen{
+  height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
+  background: var(--bg);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width:none;
+}
+.screen::-webkit-scrollbar{ display:none; }
+
+.serif{ font-family:var(--serif); }
+
+/* generic */
+.muted{ color:var(--ink-2); }
+.faint{ color:var(--ink-3); }
+
+.card{
+  background:var(--paper);
+  border-radius:var(--r-md);
+  box-shadow:var(--shadow-card);
+}
+
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 11px; border-radius:999px;
+  font-size:12.5px; font-weight:600; letter-spacing:-0.01em;
+}
+
+/* tap feedback */
+.tap{ transition: transform .12s ease, opacity .12s ease; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.tap:active{ transform:scale(0.97); opacity:.9; }
+
+/* fade/slide in */
+@keyframes riseIn{ from{ opacity:.001; transform:translateY(10px);} to{ opacity:1; transform:none;} }
+@keyframes fadeIn{ from{ opacity:.001;} to{ opacity:1;} }
+@keyframes popIn{ from{ opacity:0; transform:scale(.94);} to{ opacity:1; transform:none;} }
+@keyframes sheetUp{ from{ transform:translateY(100%);} to{ transform:translateY(0);} }
+
+.rise{ animation: riseIn .5s cubic-bezier(.2,.7,.2,1) both; }
+
+/* buttons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border:none; font-family:var(--sans); font-weight:700; font-size:16px;
+  border-radius:999px; cursor:pointer; padding:15px 22px;
+  transition: transform .12s ease, filter .12s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active{ transform:scale(.98); }
+.btn-primary{ background:var(--terra); color:#fff; box-shadow:0 6px 16px rgba(197,97,58,0.32); }
+.btn-primary:active{ filter:brightness(.96); }
+.btn-ghost{ background:var(--paper); color:var(--ink); box-shadow:var(--shadow-card); }
+.btn-sage{ background:var(--sage); color:#fff; box-shadow:0 6px 16px rgba(124,139,107,0.30); }
+
+/* section label */
+.sec-label{
+  font-size:12px; font-weight:700; letter-spacing:0.06em;
+  text-transform:uppercase; color:var(--ink-3);
+}
+
+/* waveform bars baseline */
+.wf{ display:flex; align-items:center; gap:3px; }
+.wf > i{ width:3px; border-radius:2px; background:currentColor; display:block; }
+
+/* breathing orb keyframes */
+@keyframes breathe{
+  0%,100%{ transform:scale(1); }
+  50%{ transform:scale(1.07); }
+}
+@keyframes ring{
+  0%{ transform:scale(.7); opacity:.55; }
+  100%{ transform:scale(2.1); opacity:0; }
+}
+@keyframes blink{ 0%,100%{opacity:.25;} 50%{opacity:1;} }
+@keyframes liveBar{ from{ transform:scaleY(.4);} to{ transform:scaleY(1);} }
