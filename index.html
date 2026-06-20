@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>하루 — AI 코칭 일기앱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+<style>
+/* ───────────────────────────────────────────────
+   하루 — AI 코칭 일기앱  ·  Design tokens & base
+   ─────────────────────────────────────────────── */
+:root{
+  /* surfaces */
+  --bg:        #F1EBDF;
+  --paper:     #FBF7EF;
+  --paper-2:   #F6F0E4;
+  --ink:       #33302B;
+  --ink-2:     #6E685D;
+  --ink-3:     #A39B8C;
+  --line:      rgba(51,48,43,0.09);
+  --line-2:    rgba(51,48,43,0.05);
+
+  /* brand */
+  --terra:     #C5613A;
+  --terra-d:   #A84E2C;
+  --terra-soft:#F3DDD0;
+  --sage:      #7C8B6B;
+  --sage-d:    #5F6E50;
+  --sage-soft: #E1E6D6;
+  --gold:      #C79A41;
+  --gold-soft: #F0E3C4;
+
+  /* emotion palette */
+  --emo-joy:   #DDA53C;
+  --emo-calm:  #8AA086;
+  --emo-focus: #C5613A;
+  --emo-tired: #AE9F89;
+  --emo-anx:   #CA8A5E;
+  --emo-low:   #7E90A6;
+
+  --r-lg: 28px;
+  --r-md: 20px;
+  --r-sm: 14px;
+  --shadow-card: 0 1px 2px rgba(51,48,43,0.04), 0 8px 24px rgba(51,48,43,0.06);
+  --shadow-pop:  0 8px 16px rgba(51,48,43,0.10), 0 24px 48px rgba(51,48,43,0.14);
+
+  --sans: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+  --serif: "Noto Serif KR", "Nanum Myeongjo", serif;
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+
+.app-root{
+  font-family: var(--sans);
+  color: var(--ink);
+  height:100%;
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.screen{
+  height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
+  background: var(--bg);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width:none;
+}
+.screen::-webkit-scrollbar{ display:none; }
+
+.serif{ font-family:var(--serif); }
+
+.muted{ color:var(--ink-2); }
+.faint{ color:var(--ink-3); }
+
+.card{
+  background:var(--paper);
+  border-radius:var(--r-md);
+  box-shadow:var(--shadow-card);
+}
+
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 11px; border-radius:999px;
+  font-size:12.5px; font-weight:600; letter-spacing:-0.01em;
+}
+
+.tap{ transition: transform .12s ease, opacity .12s ease; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.tap:active{ transform:scale(0.97); opacity:.9; }
+
+@keyframes riseIn{ from{ opacity:.001; transform:translateY(10px);} to{ opacity:1; transform:none;} }
+@keyframes fadeIn{ from{ opacity:.001;} to{ opacity:1;} }
+@keyframes popIn{ from{ opacity:0; transform:scale(.94);} to{ opacity:1; transform:none;} }
+@keyframes sheetUp{ from{ transform:translateY(100%);} to{ transform:translateY(0);} }
+
+.rise{ animation: riseIn .5s cubic-bezier(.2,.7,.2,1) both; }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border:none; font-family:var(--sans); font-weight:700; font-size:16px;
+  border-radius:999px; cursor:pointer; padding:15px 22px;
+  transition: transform .12s ease, filter .12s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active{ transform:scale(.98); }
+.btn-primary{ background:var(--terra); color:#fff; box-shadow:0 6px 16px rgba(197,97,58,0.32); }
+.btn-primary:active{ filter:brightness(.96); }
+.btn-ghost{ background:var(--paper); color:var(--ink); box-shadow:var(--shadow-card); }
+.btn-sage{ background:var(--sage); color:#fff; box-shadow:0 6px 16px rgba(124,139,107,0.30); }
+
+.sec-label{
+  font-size:12px; font-weight:700; letter-spacing:0.06em;
+  text-transform:uppercase; color:var(--ink-3);
+}
+
+.wf{ display:flex; align-items:center; gap:3px; }
+.wf > i{ width:3px; border-radius:2px; background:currentColor; display:block; }
+
+@keyframes breathe{
+  0%,100%{ transform:scale(1); }
+  50%{ transform:scale(1.07); }
+}
+@keyframes ring{
+  0%{ transform:scale(.7); opacity:.55; }
+  100%{ transform:scale(2.1); opacity:0; }
+}
+@keyframes blink{ 0%,100%{opacity:.25;} 50%{opacity:1;} }
+@keyframes liveBar{ from{ transform:scaleY(.4);} to{ transform:scaleY(1);} }
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(120% 90% at 50% 0%, #EBE3D3 0%, #E3D9C6 60%, #DACEB8 100%);
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 24px; box-sizing: border-box;
+  font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+}
+#stage { display: flex; align-items: center; justify-content: center; }
+.device-screen { position: absolute; inset: 0; }
+</style>
+</head>
+<body>
+  <div id="stage"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- icons -->
+  <script type="text/babel" data-presets="react">
+/* icons — line icon set (stroke = currentColor) */
+const Icon = ({ d, size = 22, sw = 1.8, fill = 'none', children, style }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill}
+       stroke="currentColor" strokeWidth={sw} strokeLinecap="round"
+       strokeLinejoin="round" style={style}>
+    {d ? <path d={d} /> : children}
+  </svg>
+);
+
+const IcHome   = (p) => <Icon {...p} d="M3 10.5 12 3l9 7.5M5.5 9v11h13V9" />;
+const IcCheck  = (p) => <Icon {...p}><path d="M3.5 11.5 4 18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2l.5-6.5"/><path d="M2.5 8.5 12 3l9.5 5.5L12 14 2.5 8.5Z"/></Icon>;
+const IcBook   = (p) => <Icon {...p}><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15.5H5.5A1.5 1.5 0 0 1 4 18V5.5Z"/><path d="M20 5.5C20 4.7 19.3 4 18.5 4H13v15.5h5.5A1.5 1.5 0 0 0 20 18V5.5Z"/></Icon>;
+const IcMic    = (p) => <Icon {...p}><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></Icon>;
+const IcClose  = (p) => <Icon {...p} d="M6 6l12 12M18 6 6 18" />;
+const IcChevR  = (p) => <Icon {...p} d="M9 5l7 7-7 7" />;
+const IcChevL  = (p) => <Icon {...p} d="M15 5l-7 7 7 7" />;
+const IcPlus   = (p) => <Icon {...p} d="M12 5v14M5 12h14" />;
+const IcSpark  = (p) => <Icon {...p}><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><path d="M12 7.5 13.4 10.6 16.5 12 13.4 13.4 12 16.5 10.6 13.4 7.5 12 10.6 10.6 12 7.5Z"/></Icon>;
+const IcSeed   = (p) => <Icon {...p}><path d="M12 21c-4-1-7-4.5-7-9 4 0 7 3 7 7"/><path d="M12 21c4-1 7-4.5 7-9-4 0-7 3-7 7"/><path d="M12 21v-7"/></Icon>;
+const IcLeaf   = (p) => <Icon {...p}><path d="M20 4C9 4 4 9.5 4 16c0 1.6.4 3 .4 3s7.6.6 12.2-4S20 4 20 4Z"/><path d="M4.5 19.5C8 14 11 11.5 16 9"/></Icon>;
+const IcTool   = (p) => <Icon {...p}><path d="M14.7 6.3a3.5 3.5 0 0 0-4.6 4.6l-6.1 6.1a1.5 1.5 0 0 0 0 2.1l.9.9a1.5 1.5 0 0 0 2.1 0l6.1-6.1a3.5 3.5 0 0 0 4.6-4.6l-2.3 2.3-2-2 2.3-2.3Z"/></Icon>;
+const IcHeart  = (p) => <Icon {...p} d="M12 20s-7-4.3-9.2-8.3C1.2 8.5 2.8 5 6.3 5c2 0 3.2 1.3 3.7 2.3C10.5 6.3 11.7 5 13.7 5c3.5 0 5.1 3.5 3.5 6.7C19 15.7 12 20 12 20Z" />;
+const IcCal    = (p) => <Icon {...p}><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v3M16 3v3"/></Icon>;
+const IcKeyb   = (p) => <Icon {...p}><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M7 10h.01M11 10h.01M15 10h.01M9 14h6"/></Icon>;
+const IcArrowU = (p) => <Icon {...p} d="M12 19V5M6 11l6-6 6 6" />;
+const IcSun    = (p) => <Icon {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></Icon>;
+const IcMoon   = (p) => <Icon {...p} d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" />;
+const IcFlame  = (p) => <Icon {...p}><path d="M12 3c.5 3-2 4-2 6.5a2 2 0 0 0 4 0c0-.6-.2-1 0-1.5 1.5 1 3 3 3 5.5a5 5 0 0 1-10 0C7 9.5 11 7 12 3Z"/></Icon>;
+const IcQuote  = (p) => <Icon {...p}><path d="M9 7H5.5A1.5 1.5 0 0 0 4 8.5V12a1.5 1.5 0 0 0 1.5 1.5H8V16a3 3 0 0 1-3 3M19 7h-3.5A1.5 1.5 0 0 0 14 8.5V12a1.5 1.5 0 0 0 1.5 1.5H18V16a3 3 0 0 1-3 3"/></Icon>;
+
+Object.assign(window, {
+  IcHome, IcCheck, IcBook, IcMic, IcClose, IcChevR, IcChevL, IcPlus, IcSpark,
+  IcSeed, IcLeaf, IcTool, IcHeart, IcCal, IcKeyb, IcArrowU, IcSun, IcMoon,
+  IcFlame, IcQuote,
+});
+  </script>
+
+  <!-- data -->
+  <script type="text/babel" data-presets="react">
+/* data — emotion palette, conversation script, diary, todos, monthly */
+
+const EMO = {
+  joy:   { key:'joy',   label:'뿌듯',  color:'var(--emo-joy)',   face:'◠‿◠' },
+  calm:  { key:'calm',  label:'평온',  color:'var(--emo-calm)',  face:'◡' },
+  focus: { key:'focus', label:'몰입',  color:'var(--emo-focus)', face:'◉' },
+  tired: { key:'tired', label:'지침',  color:'var(--emo-tired)', face:'－' },
+  anx:   { key:'anx',   label:'긴장',  color:'var(--emo-anx)',   face:'◠' },
+  low:   { key:'low',   label:'가라앉음', color:'var(--emo-low)', face:'◡' },
+};
+
+const CONVO = [
+  { role:'coach', text:'좋은 저녁이에요. 오늘 하루, 아침부터 떠오르는 대로 편하게 들려주세요.\n제가 옆에서 같이 정리해드릴게요.' },
+  { role:'user',  text:'오늘 좀 정신없었어. 오전에 디자인 시안 발표가 있었는데 긴장을 많이 했어. 팀장님이 피드백을 많이 주셔서 처음엔 위축됐는데, 오후에 다시 수정해서 결국 마일스톤 하나를 마무리했어.' },
+  { role:'coach', text:'마일스톤을 끝냈군요, 정말 고생 많았어요. 발표 전에 긴장했다고 하셨는데 — 그 긴장은 어떤 마음에서 왔던 것 같아요? 잘 보이고 싶었던 걸까요, 준비가 부족하게 느껴졌던 걸까요?', tag:'감정 들여다보기' },
+  { role:'user',  text:'둘 다였던 것 같아. 완벽하게 보여주고 싶었는데, 전날 늦게까지 했는데도 뭔가 부족한 느낌이 들었어.' },
+  { role:'coach', text:'완벽하게 해내고 싶은 마음이 컸군요. 그런데 결국 피드백을 받아 수정하고 마일스톤까지 마쳤잖아요. 그 과정에서 스스로에 대해 새롭게 알게 된 점이 있을까요?', tag:'인사이트 끌어내기' },
+  { role:'user',  text:'피드백 받는 게 무섭다고만 생각했는데, 막상 받고 고치니까 결과물이 훨씬 좋아졌어. 혼자 끙끙대는 것보다 빨리 보여주는 게 낫다는 걸 또 느꼈어.' },
+  { role:'coach', text:'정말 중요한 깨달음이네요 — "혼자 완벽하게"보다 "빨리 보여주고 함께 고치기". 오늘 감정을 돌아보면, 아침의 긴장에서 지금은 어떤 마음으로 바뀌어 있나요?', tag:'감정 돌보기' },
+  { role:'user',  text:'지금은 좀 뿌듯하고 후련해. 근데 운동을 또 못 가서 그건 좀 아쉬워.' },
+  { role:'coach', text:'뿌듯함과 작은 아쉬움이 함께 있네요. 그 아쉬움도 스스로를 챙기고 싶은 마음이라 소중해요. 오늘 이야기 충분히 들었어요. 이제 일기로 정리하고, 인사이트와 감정, 내일 이어갈 일들을 뽑아볼게요.', last:true },
+];
+
+const QUICK = {
+  1: ['오늘 있었던 일 말하기', '바로 감정부터 얘기할래'],
+  3: ['맞아, 둘 다였어', '준비가 부족했어'],
+  5: ['빨리 공유하는 게 낫더라', '아직도 잘 모르겠어'],
+  7: ['뿌듯하고 후련해', '아직 좀 지쳐있어'],
+};
+
+const DIARY = {
+  dateLabel: '6월 14일 토요일',
+  title: '부딪히고, 고치고, 끝내 마무리한 하루',
+  moodArc: ['anx','focus','joy'],
+  primary: 'joy',
+  body: `오전 디자인 시안 발표를 앞두고 잔뜩 긴장했다. 완벽하게 보여주고 싶은 마음에 전날 늦게까지 매달렸지만, 발표 자리에서 팀장님의 피드백이 쏟아지자 처음엔 위축됐다. 그래도 오후에 마음을 다잡고 하나씩 수정했고, 결국 미뤄두었던 마일스톤 하나를 마무리했다.\n\n돌아보니 두려워하던 피드백이 결과물을 훨씬 좋게 만들었다. 혼자 끙끙 앓기보다 빨리 보여주고 함께 고치는 편이 낫다는 걸 다시 한 번 몸으로 배웠다. 마무리한 지금은 뿌듯하고 후련하다. 다만 오늘도 운동을 건너뛴 건 조금 아쉽다.`,
+  insights: [
+    { type:'learn', text:'피드백은 위협이 아니라 결과물을 끌어올리는 재료다. 두려움은 대부분 "받기 전"에 가장 크다.' },
+    { type:'keep',  text:'완성도가 낮아 보여도 빨리 공유하고 함께 다듬는 방식. 오늘도 이게 통했다.' },
+    { type:'fix',   text:'발표 전날 몰아서 준비하는 습관. 미리 중간 점검을 받았다면 긴장이 덜했을 것.' },
+  ],
+  tags: ['업무', '성장', '건강'],
+  carryTodos: [
+    '디자인 시안 2차 수정안 팀에 공유하기',
+    '다음 발표는 3일 전 중간 리뷰 잡기',
+    '저녁 30분 가볍게 걷기',
+  ],
+};
+
+const TODOS_TODAY = [
+  { id:'t1', text:'디자인 시안 발표 준비 마무리', done:true,  cat:'업무' },
+  { id:'t2', text:'마일스톤 1 리뷰 반영', done:true,  cat:'업무' },
+  { id:'t3', text:'시안 2차 수정안 팀에 공유', done:false, cat:'업무', from:'대화' },
+  { id:'t4', text:'저녁 30분 가볍게 걷기', done:false, cat:'건강', from:'대화' },
+  { id:'t5', text:'엄마 생신 선물 알아보기', done:false, cat:'관계' },
+];
+const TODOS_CARRY = [
+  { id:'c1', text:'헬스장 PT 일정 다시 잡기', done:false, cat:'건강' },
+];
+
+const RECENT = [
+  { d:'13', day:'금', mood:'tired', title:'끝이 안 보이던 회의들, 그래도 버틴 날', cats:['업무'] },
+  { d:'12', day:'목', mood:'calm',  title:'오랜만에 산책하며 머리를 비운 저녁', cats:['건강','관계'] },
+  { d:'11', day:'수', mood:'focus', title:'몰입이 잘 되던, 코드가 술술 풀린 하루', cats:['업무','성장'] },
+];
+
+const MONTH_DAYS = (() => {
+  const seq = {
+    1:'calm',2:'focus',3:'tired',4:'anx',5:'joy',6:'calm',7:'low',
+    8:'focus',9:'focus',10:'tired',11:'focus',12:'calm',13:'tired',14:'joy',
+  };
+  const arr = [];
+  for (let i=1;i<=30;i++) arr.push({ day:i, mood: seq[i] || null });
+  return arr;
+})();
+
+const MONTH_EMO_DIST = [
+  { key:'focus', n:5 }, { key:'calm', n:4 }, { key:'joy', n:3 },
+  { key:'tired', n:4 }, { key:'anx', n:2 }, { key:'low', n:1 },
+];
+
+const MONTH_CATS = [
+  { name:'업무·성장', n:11, color:'var(--terra)',
+    insight:'"빨리 공유하고 함께 고치기"가 이번 달 반복된 성공 공식. 혼자 완벽을 좇을수록 더뎌졌다.' },
+  { name:'건강·몸', n:6, color:'var(--sage)',
+    insight:'운동을 미루는 패턴이 9일 반복. 일이 바쁜 주에 가장 먼저 건너뛴다.' },
+  { name:'관계·마음', n:5, color:'var(--gold)',
+    insight:'사람들과 대화한 날의 기분이 확연히 좋았다. 고립될수록 가라앉는 경향.' },
+];
+
+const MONTH_KEYWORDS = ['피드백', '마일스톤', '완벽주의', '산책', '몰입', '아쉬움'];
+
+Object.assign(window, {
+  EMO, CONVO, QUICK, DIARY, TODOS_TODAY, TODOS_CARRY, RECENT,
+  MONTH_DAYS, MONTH_EMO_DIST, MONTH_CATS, MONTH_KEYWORDS,
+});
+  </script>
+
+  <!-- ui shared components -->
+  <script type="text/babel" data-presets="react">
+/* ui — shared small components */
+
+const EMO_LIST = ['joy','calm','focus','tired','anx','low'];
+
+function MoodDot({ mood, size = 12 }) {
+  const e = window.EMO[mood];
+  return <span style={{ width:size, height:size, borderRadius:'50%',
+    background:e ? e.color : 'var(--ink-3)', display:'inline-block', flexShrink:0 }} />;
+}
+
+function MoodChip({ mood, faded }) {
+  const e = window.EMO[mood];
+  if (!e) return null;
+  return (
+    <span className="pill" style={{
+      background: faded ? 'var(--paper-2)' : `color-mix(in srgb, ${e.color} 16%, var(--paper))`,
+      color: faded ? 'var(--ink-2)' : `color-mix(in srgb, ${e.color} 62%, var(--ink))`,
+    }}>
+      <MoodDot mood={mood} size={9} />{e.label}
+    </span>
+  );
+}
+
+function MoodArc({ arc }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+      {arc.map((m,i) => (
+        <React.Fragment key={i}>
+          <MoodChip mood={m} />
+          {i < arc.length-1 && (
+            <window.IcChevR size={14} style={{ color:'var(--ink-3)' }} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+function WaveBars({ n = 22, color = 'currentColor', h = 18, seed = 1 }) {
+  const bars = React.useMemo(() => {
+    const a = [];
+    let s = seed * 9301 + 49297;
+    for (let i=0;i<n;i++){ s = (s*9301+49297)%233280; a.push(0.25 + (s/233280)*0.75); }
+    return a;
+  }, [n, seed]);
+  return (
+    <span className="wf" style={{ color, height:h }}>
+      {bars.map((v,i)=><i key={i} style={{ height: Math.round(v*h) }} />)}
+    </span>
+  );
+}
+
+const INSIGHT_META = {
+  learn: { label:'오늘 배운 점', Icon: () => <window.IcSpark size={18}/>, color:'var(--gold)' },
+  keep:  { label:'이어갈 점',   Icon: () => <window.IcLeaf  size={18}/>, color:'var(--sage)' },
+  fix:   { label:'고칠 점',     Icon: () => <window.IcTool  size={18}/>, color:'var(--terra)' },
+};
+
+function InsightCard({ ins, delay = 0 }) {
+  const m = INSIGHT_META[ins.type];
+  return (
+    <div className="card rise" style={{ padding:'16px 17px', display:'flex', gap:13, animationDelay:`${delay}ms` }}>
+      <div style={{ width:34, height:34, borderRadius:11, flexShrink:0, display:'grid', placeItems:'center',
+        background:`color-mix(in srgb, ${m.color} 15%, var(--paper))`, color:m.color }}>
+        <m.Icon />
+      </div>
+      <div style={{ flex:1 }}>
+        <div style={{ fontSize:12.5, fontWeight:700, color:m.color, marginBottom:4, letterSpacing:'-0.01em' }}>{m.label}</div>
+        <div style={{ fontSize:14.5, lineHeight:1.55, color:'var(--ink)' }}>{ins.text}</div>
+      </div>
+    </div>
+  );
+}
+
+function Tag({ children }) {
+  return <span className="pill" style={{ background:'var(--paper-2)', color:'var(--ink-2)', fontWeight:600 }}>#{children}</span>;
+}
+
+Object.assign(window, { EMO_LIST, MoodDot, MoodChip, MoodArc, WaveBars, InsightCard, INSIGHT_META, Tag });
+  </script>
+
+  <!-- iOS device frame -->
+  <script type="text/babel" data-presets="react">
+/* ios-frame — iOS 26 (Liquid Glass) device frame */
+
+function IOSStatusBar({ dark = false, time = '9:41' }) {
+  const c = dark ? '#fff' : '#000';
+  return (
+    <div style={{
+      display: 'flex', gap: 154, alignItems: 'center', justifyContent: 'center',
+      padding: '21px 24px 19px', boxSizing: 'border-box',
+      position: 'relative', zIndex: 20, width: '100%',
+    }}>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 1.5 }}>
+        <span style={{
+          fontFamily: '-apple-system, "SF Pro", system-ui', fontWeight: 590,
+          fontSize: 17, lineHeight: '22px', color: c,
+        }}>{time}</span>
+      </div>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: 1, paddingRight: 1 }}>
+        <svg width="19" height="12" viewBox="0 0 19 12">
+          <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill={c}/>
+          <rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill={c}/>
+          <rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7" fill={c}/>
+          <rect x="14.4" y="0" width="3.2" height="12" rx="0.7" fill={c}/>
+        </svg>
+        <svg width="17" height="12" viewBox="0 0 17 12">
+          <path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill={c}/>
+          <path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill={c}/>
+          <circle cx="8.5" cy="10.5" r="1.5" fill={c}/>
+        </svg>
+        <svg width="27" height="13" viewBox="0 0 27 13">
+          <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke={c} strokeOpacity="0.35" fill="none"/>
+          <rect x="2" y="2" width="20" height="9" rx="2" fill={c}/>
+          <path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill={c} fillOpacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function IOSGlassPill({ children, dark = false, style = {} }) {
+  return (
+    <div style={{
+      height: 44, minWidth: 44, borderRadius: 9999,
+      position: 'relative', overflow: 'hidden',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: dark
+        ? '0 2px 6px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.2)'
+        : '0 1px 3px rgba(0,0,0,0.07), 0 3px 10px rgba(0,0,0,0.06)',
+      ...style,
+    }}>
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 9999,
+        backdropFilter: 'blur(12px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        background: dark ? 'rgba(120,120,128,0.28)' : 'rgba(255,255,255,0.5)',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 9999,
+        boxShadow: dark
+          ? 'inset 1.5px 1.5px 1px rgba(255,255,255,0.15), inset -1px -1px 1px rgba(255,255,255,0.08)'
+          : 'inset 1.5px 1.5px 1px rgba(255,255,255,0.7), inset -1px -1px 1px rgba(255,255,255,0.4)',
+        border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)',
+      }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', padding: '0 4px' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function IOSNavBar({ title = 'Title', dark = false, trailingIcon = true }) {
+  const muted = dark ? 'rgba(255,255,255,0.6)' : '#404040';
+  const text = dark ? '#fff' : '#000';
+  const pillIcon = (content) => (
+    <IOSGlassPill dark={dark}>
+      <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {content}
+      </div>
+    </IOSGlassPill>
+  );
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', gap: 10,
+      paddingTop: 62, paddingBottom: 10, position: 'relative', zIndex: 5,
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 16px',
+      }}>
+        {pillIcon(
+          <svg width="12" height="20" viewBox="0 0 12 20" fill="none" style={{ marginLeft: -1 }}>
+            <path d="M10 2L2 10l8 8" stroke={muted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+        {trailingIcon && pillIcon(
+          <svg width="22" height="6" viewBox="0 0 22 6">
+            <circle cx="3" cy="3" r="2.5" fill={muted}/>
+            <circle cx="11" cy="3" r="2.5" fill={muted}/>
+            <circle cx="19" cy="3" r="2.5" fill={muted}/>
+          </svg>
+        )}
+      </div>
+      <div style={{
+        padding: '0 16px',
+        fontFamily: '-apple-system, system-ui',
+        fontSize: 34, fontWeight: 700, lineHeight: '41px',
+        color: text, letterSpacing: 0.4,
+      }}>{title}</div>
+    </div>
+  );
+}
+
+function IOSListRow({ title, detail, icon, chevron = true, isLast = false, dark = false }) {
+  const text = dark ? '#fff' : '#000';
+  const sec = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const ter = dark ? 'rgba(235,235,245,0.3)' : 'rgba(60,60,67,0.3)';
+  const sep = dark ? 'rgba(84,84,88,0.65)' : 'rgba(60,60,67,0.12)';
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', minHeight: 52,
+      padding: '0 16px', position: 'relative',
+      fontFamily: '-apple-system, system-ui', fontSize: 17,
+      letterSpacing: -0.43,
+    }}>
+      {icon && (
+        <div style={{
+          width: 30, height: 30, borderRadius: 7, background: icon,
+          marginRight: 12, flexShrink: 0,
+        }} />
+      )}
+      <div style={{ flex: 1, color: text }}>{title}</div>
+      {detail && <span style={{ color: sec, marginRight: 6 }}>{detail}</span>}
+      {chevron && (
+        <svg width="8" height="14" viewBox="0 0 8 14" style={{ flexShrink: 0 }}>
+          <path d="M1 1l6 6-6 6" stroke={ter} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+      {!isLast && (
+        <div style={{
+          position: 'absolute', bottom: 0, right: 0,
+          left: icon ? 58 : 16, height: 0.5, background: sep,
+        }} />
+      )}
+    </div>
+  );
+}
+
+function IOSList({ header, children, dark = false }) {
+  const hc = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const bg = dark ? '#1C1C1E' : '#fff';
+  return (
+    <div>
+      {header && (
+        <div style={{
+          fontFamily: '-apple-system, system-ui', fontSize: 13,
+          color: hc, textTransform: 'uppercase',
+          padding: '8px 36px 6px', letterSpacing: -0.08,
+        }}>{header}</div>
+      )}
+      <div style={{
+        background: bg, borderRadius: 26,
+        margin: '0 16px', overflow: 'hidden',
+      }}>{children}</div>
+    </div>
+  );
+}
+
+function IOSDevice({
+  children, width = 402, height = 874, dark = false,
+  title, keyboard = false,
+}) {
+  return (
+    <div style={{
+      width, height, borderRadius: 48, overflow: 'hidden',
+      position: 'relative', background: dark ? '#000' : '#F2F2F7',
+      boxShadow: '0 40px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12)',
+      fontFamily: '-apple-system, system-ui, sans-serif',
+      WebkitFontSmoothing: 'antialiased',
+    }}>
+      {/* dynamic island */}
+      <div style={{
+        position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+        width: 126, height: 37, borderRadius: 24, background: '#000', zIndex: 50,
+      }} />
+      {/* status bar */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <IOSStatusBar dark={dark} />
+      </div>
+      {/* nav + content */}
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {title !== undefined && <IOSNavBar title={title} dark={dark} />}
+        <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
+        {keyboard && <IOSKeyboard dark={dark} />}
+      </div>
+      {/* home indicator */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 60,
+        height: 34, display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+        paddingBottom: 8, pointerEvents: 'none',
+      }}>
+        <div style={{
+          width: 139, height: 5, borderRadius: 100,
+          background: dark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.25)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function IOSKeyboard({ dark = false }) {
+  const glyph = dark ? 'rgba(255,255,255,0.7)' : '#595959';
+  const sugg = dark ? 'rgba(255,255,255,0.6)' : '#333';
+  const keyBg = dark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.85)';
+
+  const icons = {
+    shift: <svg width="19" height="17" viewBox="0 0 19 17"><path d="M9.5 1L1 9.5h4.5V16h8V9.5H18L9.5 1z" fill={glyph}/></svg>,
+    del: <svg width="23" height="17" viewBox="0 0 23 17"><path d="M7 1h13a2 2 0 012 2v11a2 2 0 01-2 2H7l-6-7.5L7 1z" fill="none" stroke={glyph} strokeWidth="1.6" strokeLinejoin="round"/><path d="M10 5l7 7M17 5l-7 7" stroke={glyph} strokeWidth="1.6" strokeLinecap="round"/></svg>,
+    ret: <svg width="20" height="14" viewBox="0 0 20 14"><path d="M18 1v6H4m0 0l4-4M4 7l4 4" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  };
+
+  const key = (content, { w, flex, ret, fs = 25, k } = {}) => (
+    <div key={k} style={{
+      height: 42, borderRadius: 8.5,
+      flex: flex ? 1 : undefined, width: w, minWidth: 0,
+      background: ret ? '#08f' : keyBg,
+      boxShadow: '0 1px 0 rgba(0,0,0,0.075)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: '-apple-system, "SF Compact", system-ui',
+      fontSize: fs, fontWeight: 458, color: ret ? '#fff' : glyph,
+    }}>{content}</div>
+  );
+
+  const row = (keys, pad = 0) => (
+    <div style={{ display: 'flex', gap: 6.5, justifyContent: 'center', padding: `0 ${pad}px` }}>
+      {keys.map(l => key(l, { flex: true, k: l }))}
+    </div>
+  );
+
+  return (
+    <div style={{
+      position: 'relative', zIndex: 15, borderRadius: 27, overflow: 'hidden',
+      padding: '11px 0 2px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      boxShadow: dark
+        ? '0 -2px 20px rgba(0,0,0,0.09)'
+        : '0 -1px 6px rgba(0,0,0,0.018), 0 -3px 20px rgba(0,0,0,0.012)',
+    }}>
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 27,
+        backdropFilter: 'blur(12px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        background: dark ? 'rgba(120,120,128,0.14)' : 'rgba(255,255,255,0.25)',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 27,
+        boxShadow: dark
+          ? 'inset 1.5px 1.5px 1px rgba(255,255,255,0.15)'
+          : 'inset 1.5px 1.5px 1px rgba(255,255,255,0.7), inset -1px -1px 1px rgba(255,255,255,0.4)',
+        border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)',
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        display: 'flex', gap: 20, alignItems: 'center',
+        padding: '8px 22px 13px', width: '100%', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {['"The"', 'the', 'to'].map((w, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <div style={{ width: 1, height: 25, background: '#ccc', opacity: 0.3 }} />}
+            <div style={{
+              flex: 1, textAlign: 'center',
+              fontFamily: '-apple-system, system-ui', fontSize: 17,
+              color: sugg, letterSpacing: -0.43, lineHeight: '22px',
+            }}>{w}</div>
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: 13,
+        padding: '0 6.5px', width: '100%', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {row(['q','w','e','r','t','y','u','i','o','p'])}
+        {row(['a','s','d','f','g','h','j','k','l'], 20)}
+        <div style={{ display: 'flex', gap: 14.25, alignItems: 'center' }}>
+          {key(icons.shift, { w: 45, k: 'shift' })}
+          <div style={{ display: 'flex', gap: 6.5, flex: 1 }}>
+            {['z','x','c','v','b','n','m'].map(l => key(l, { flex: true, k: l }))}
+          </div>
+          {key(icons.del, { w: 45, k: 'del' })}
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {key('ABC', { w: 92.25, fs: 18, k: 'abc' })}
+          {key('', { flex: true, k: 'space' })}
+          {key(icons.ret, { w: 92.25, ret: true, k: 'ret' })}
+        </div>
+      </div>
+      <div style={{ height: 56, width: '100%', position: 'relative' }} />
+    </div>
+  );
+}
+
+Object.assign(window, {
+  IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard,
+});
+  </script>
+
+  <!-- screen-home -->
+  <script type="text/babel" data-presets="react">
+/* screen-home — dashboard */
+function HomeScreen({ todayDone, onRecord, onOpenDiary, onGoTodo, onGoMonthly, todos }) {
+  const D = window.DIARY;
+  const openCount = todos.filter(t=>!t.done).length;
+  const doneCount = todos.filter(t=>t.done).length;
+
+  return (
+    <div className="screen" style={{ paddingBottom:118 }}>
+      <div style={{ padding:'70px 22px 8px' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:7, color:'var(--ink-3)', fontSize:13.5, fontWeight:600 }}>
+              <window.IcMoon size={15}/> 6월 14일 토요일 저녁
+            </div>
+            <h1 className="serif" style={{ margin:'10px 0 0', fontSize:27, fontWeight:600, lineHeight:1.3, letterSpacing:'-0.01em' }}>
+              오늘 하루,<br/>같이 정리해볼까요?
+            </h1>
+          </div>
+          <div className="pill tap" style={{ background:'var(--paper)', boxShadow:'var(--shadow-card)', color:'var(--terra)', padding:'8px 12px', fontWeight:700 }}>
+            <window.IcFlame size={16}/> 12일
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding:'14px 18px 0' }}>
+        {!todayDone ? (
+          <button className="tap" onClick={onRecord} style={{
+            width:'100%', border:'none', textAlign:'left', cursor:'pointer',
+            background:'linear-gradient(135deg, #C5613A 0%, #B0512E 100%)',
+            borderRadius:'var(--r-lg)', padding:'22px 22px 24px', color:'#fff',
+            boxShadow:'0 10px 28px rgba(176,81,46,0.36)', position:'relative', overflow:'hidden',
+          }}>
+            <div style={{ position:'absolute', right:-26, top:-26, width:150, height:150, borderRadius:'50%',
+              background:'rgba(255,255,255,0.10)' }} />
+            <div style={{ position:'absolute', right:18, bottom:14, width:84, height:84, borderRadius:'50%',
+              background:'rgba(255,255,255,0.08)' }} />
+            <div style={{ display:'flex', alignItems:'center', gap:9, fontSize:13, fontWeight:700, opacity:.92 }}>
+              <window.IcMic size={17}/> 음성으로 기록하기
+            </div>
+            <div className="serif" style={{ fontSize:21, fontWeight:600, marginTop:12, lineHeight:1.45, maxWidth:230 }}>
+              말만 해주세요. 코치가<br/>질문하며 같이 정리해요.
+            </div>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginTop:18,
+              background:'rgba(255,255,255,0.18)', borderRadius:999, padding:'10px 16px', fontSize:14.5, fontWeight:700 }}>
+              대화 시작하기 <window.IcChevR size={15}/>
+            </div>
+          </button>
+        ) : (
+          <button className="tap card" onClick={onOpenDiary} style={{
+            width:'100%', border:'none', textAlign:'left', cursor:'pointer',
+            padding:'18px 19px 20px', display:'block',
+          }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:11 }}>
+              <span className="pill" style={{ background:'var(--terra-soft)', color:'var(--terra-d)' }}>
+                <window.IcBook size={13}/> 오늘의 일기
+              </span>
+              <window.MoodArc arc={D.moodArc} />
+            </div>
+            <div className="serif" style={{ fontSize:19, fontWeight:600, lineHeight:1.4 }}>{D.title}</div>
+            <div className="muted" style={{ fontSize:13.5, lineHeight:1.6, marginTop:8,
+              display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
+              {D.body.split('\n')[0]}
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:13, color:'var(--terra)', fontSize:13.5, fontWeight:700 }}>
+              일기와 인사이트 보기 <window.IcChevR size={14}/>
+            </div>
+          </button>
+        )}
+      </div>
+
+      <div style={{ padding:'20px 18px 0' }}>
+        <SectionHead label="오늘의 할 일" right={`${doneCount}/${doneCount+openCount}`} onRight={onGoTodo} />
+        <button className="tap card" onClick={onGoTodo} style={{ width:'100%', border:'none', textAlign:'left', cursor:'pointer', padding:'15px 17px', display:'block' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:11 }}>
+            {todos.slice(0,3).map(t=>(
+              <div key={t.id} style={{ display:'flex', alignItems:'center', gap:11 }}>
+                <span style={{ width:19, height:19, borderRadius:6, flexShrink:0, display:'grid', placeItems:'center',
+                  border: t.done ? 'none' : '1.7px solid var(--line)',
+                  background: t.done ? 'var(--sage)' : 'transparent', color:'#fff' }}>
+                  {t.done && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>}
+                </span>
+                <span style={{ flex:1, fontSize:14.5, color: t.done ? 'var(--ink-3)' : 'var(--ink)',
+                  textDecoration: t.done ? 'line-through' : 'none', textDecorationColor:'var(--ink-3)' }}>{t.text}</span>
+                {t.from && <span className="pill" style={{ background:'var(--gold-soft)', color:'#9A7420', fontSize:10.5, padding:'3px 8px' }}>대화</span>}
+              </div>
+            ))}
+          </div>
+        </button>
+      </div>
+
+      <div style={{ padding:'22px 18px 0' }}>
+        <SectionHead label="지난 기록" right="회고 보기" onRight={onGoMonthly} />
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {window.RECENT.map((r,i)=>(
+            <div key={i} className="card tap" style={{ padding:'13px 15px', display:'flex', alignItems:'center', gap:13 }}>
+              <div style={{ width:44, flexShrink:0, textAlign:'center' }}>
+                <div className="serif" style={{ fontSize:20, fontWeight:600, lineHeight:1 }}>{r.d}</div>
+                <div className="faint" style={{ fontSize:11, marginTop:2 }}>{r.day}</div>
+              </div>
+              <div style={{ width:1, height:30, background:'var(--line)' }} />
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:14, fontWeight:600, lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.title}</div>
+                <div style={{ display:'flex', gap:6, marginTop:5 }}>
+                  {r.cats.map(c=><span key={c} className="faint" style={{ fontSize:11.5, fontWeight:600 }}>#{c}</span>)}
+                </div>
+              </div>
+              <window.MoodDot mood={r.mood} size={11} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHead({ label, right, onRight }) {
+  return (
+    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:11, padding:'0 2px' }}>
+      <span className="sec-label">{label}</span>
+      {right && <button className="tap" onClick={onRight} style={{ border:'none', background:'none', color:'var(--ink-2)', fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:3 }}>
+        {right} <window.IcChevR size={13}/>
+      </button>}
+    </div>
+  );
+}
+
+Object.assign(window, { HomeScreen, SectionHead });
+  </script>
+
+  <!-- screen-convo -->
+  <script type="text/babel" data-presets="react">
+/* screen-convo — voice coaching conversation (core) */
+const { useState, useRef, useEffect, useCallback } = React;
+
+function CoachOrb({ size = 30, active }) {
+  return (
+    <div style={{ width:size, height:size, borderRadius:'50%', flexShrink:0, position:'relative',
+      background:'radial-gradient(circle at 32% 30%, #E89A6B 0%, #C5613A 55%, #A84E2C 100%)',
+      boxShadow:'0 3px 8px rgba(168,78,44,0.34), inset 0 1px 2px rgba(255,255,255,0.4)',
+      animation: active ? 'breathe 2.6s ease-in-out infinite' : 'none' }}>
+      <div style={{ position:'absolute', top:'24%', left:'26%', width:'22%', height:'22%',
+        borderRadius:'50%', background:'rgba(255,255,255,0.55)' }} />
+    </div>
+  );
+}
+
+function LiveWave({ color = '#fff' }) {
+  const bars = [0.4,0.7,1,0.55,0.85,0.45,0.95,0.6,0.75,0.4,0.9,0.5,0.8];
+  return (
+    <span className="wf" style={{ color, height:22 }}>
+      {bars.map((v,i)=>(
+        <i key={i} style={{ height:22*v, animation:`liveBar 0.7s ease-in-out ${i*0.06}s infinite alternate` }} />
+      ))}
+    </span>
+  );
+}
+
+function ConvoScreen({ onClose, onFinish }) {
+  const C = window.CONVO;
+  const [msgs, setMsgs] = useState([{ ...C[0], id:0 }]);
+  const [nextIdx, setNextIdx] = useState(1);
+  const [mode, setMode] = useState('idle');
+  const [partial, setPartial] = useState('');
+  const [kb, setKb] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [done, setDone] = useState(false);
+  const scrollRef = useRef(null);
+  const timers = useRef([]);
+
+  const scrollDown = useCallback(() => {
+    const el = scrollRef.current;
+    if (el) requestAnimationFrame(() => { el.scrollTop = el.scrollHeight + 400; });
+  }, []);
+  useEffect(scrollDown, [msgs, partial, mode, done]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const T = (fn, ms) => { const id = setTimeout(fn, ms); timers.current.push(id); return id; };
+
+  const coachReply = useCallback((idx, userText, viaAI) => {
+    setMode('thinking');
+    const scripted = C[idx] && C[idx].role === 'coach' ? C[idx] : null;
+    const commit = (text, tag) => {
+      setMsgs(m => [...m, { role:'coach', text, tag: tag, id: Date.now()+Math.random() }]);
+      setMode('idle');
+      if (scripted && scripted.last) setDone(true);
+      setNextIdx(idx + 1);
+    };
+    if (viaAI && window.claude && window.claude.complete) {
+      const ctx = C.slice(0, idx).concat([{role:'user',text:userText}])
+        .map(m => `${m.role==='coach'?'코치':'나'}: ${m.text}`).join('\n');
+      window.claude.complete({ messages:[{ role:'user', content:
+`너는 따뜻하고 통찰력 있는 일기 코치야. 사용자가 하루를 이야기하면, 감정을 돌보고 인사이트를 끌어내는 "질문 하나"만 짧게(2문장 이내) 한국어 반말 존댓말 섞지 말고 부드러운 존댓말로 해. 설명·요약 금지, 오직 질문.\n\n[대화]\n${ctx}\n\n코치의 다음 질문:` }] })
+        .then(r => commit((r||'').trim() || (scripted?scripted.text:'그 마음을 조금 더 들려주실 수 있어요?'), '감정 돌보기'))
+        .catch(() => commit(scripted?scripted.text:'그 마음을 조금 더 들려주실 수 있어요?', scripted?scripted.tag:null));
+    } else {
+      T(() => commit(scripted?scripted.text:'그 마음을 조금 더 들려주실 수 있어요?', scripted?scripted.tag:null), 1100);
+    }
+  }, []);
+
+  const startListen = () => {
+    if (mode !== 'idle' || done) return;
+    const line = (C[nextIdx] && C[nextIdx].role==='user') ? C[nextIdx].text : '오늘 있었던 일을 떠올려보고 있어요...';
+    const words = line.split(' ');
+    setMode('listening'); setPartial('');
+    let i = 0;
+    const step = () => {
+      i++;
+      setPartial(words.slice(0,i).join(' '));
+      if (i < words.length) T(step, 70 + Math.random()*70);
+      else T(() => commitSpeech(line), 500);
+    };
+    T(step, 350);
+  };
+  const stopListen = () => {
+    if (mode !== 'listening') return;
+    const line = (C[nextIdx] && C[nextIdx].role==='user') ? C[nextIdx].text : partial || '...';
+    commitSpeech(line);
+  };
+  const commitSpeech = (line) => {
+    timers.current.forEach(clearTimeout); timers.current = [];
+    setPartial('');
+    setMsgs(m => [...m, { role:'user', voice:true, text:line, id:Date.now() }]);
+    const ci = nextIdx + 1;
+    setNextIdx(ci);
+    T(() => coachReply(ci, line, false), 450);
+  };
+
+  const sendDraft = () => {
+    const text = draft.trim();
+    if (!text || mode==='thinking') return;
+    setDraft('');
+    const scriptedUserHere = (C[nextIdx] && C[nextIdx].role==='user');
+    setMsgs(m => [...m, { role:'user', voice:false, text, id:Date.now() }]);
+    const ci = scriptedUserHere ? nextIdx+1 : nextIdx;
+    setNextIdx(ci);
+    T(() => coachReply(ci, text, true), 300);
+  };
+
+  const quick = window.QUICK[nextIdx];
+
+  return (
+    <div style={{ position:'absolute', inset:0, zIndex:80, background:'var(--bg)',
+      display:'flex', flexDirection:'column' }}>
+      <div style={{ paddingTop:58, paddingBottom:12, paddingInline:18, display:'flex', alignItems:'center',
+        justifyContent:'space-between', borderBottom:'1px solid var(--line-2)', background:'var(--bg)' }}>
+        <button className="tap" onClick={onClose} style={{ border:'none', background:'var(--paper)', width:38, height:38,
+          borderRadius:'50%', display:'grid', placeItems:'center', boxShadow:'var(--shadow-card)', color:'var(--ink-2)', cursor:'pointer' }}>
+          <window.IcClose size={18}/>
+        </button>
+        <div style={{ textAlign:'center' }}>
+          <div style={{ fontSize:14.5, fontWeight:700 }}>코치와 대화</div>
+          <div className="faint" style={{ fontSize:11.5, display:'flex', alignItems:'center', gap:5, justifyContent:'center', marginTop:1 }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background:'var(--terra)', animation:'blink 1.6s infinite' }} />
+            6월 14일 · 기록 중
+          </div>
+        </div>
+        <div style={{ width:38 }} />
+      </div>
+
+      <div ref={scrollRef} className="screen" style={{ flex:1, padding:'20px 18px 8px' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+          {msgs.map(m => <Bubble key={m.id} m={m} />)}
+          {mode==='thinking' && (
+            <div style={{ display:'flex', gap:10, alignItems:'flex-end' }}>
+              <CoachOrb size={28} active />
+              <div className="card" style={{ padding:'13px 16px', display:'flex', gap:5, borderTopLeftRadius:6 }}>
+                {[0,1,2].map(i=><span key={i} style={{ width:7, height:7, borderRadius:'50%', background:'var(--ink-3)', animation:`blink 1.1s ${i*0.18}s infinite` }} />)}
+              </div>
+            </div>
+          )}
+          {mode==='listening' && (
+            <div style={{ display:'flex', justifyContent:'flex-end' }}>
+              <div style={{ maxWidth:'82%', background:'var(--terra)', color:'#fff', padding:'14px 16px',
+                borderRadius:'20px 20px 6px 20px', boxShadow:'0 6px 16px rgba(197,97,58,0.3)' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom: partial?9:0 }}>
+                  <LiveWave /><span style={{ fontSize:11.5, fontWeight:700, opacity:.85, marginLeft:'auto' }}>듣는 중…</span>
+                </div>
+                {partial && <div style={{ fontSize:15, lineHeight:1.55 }}>{partial}<span style={{ opacity:.6 }}>｜</span></div>}
+              </div>
+            </div>
+          )}
+        </div>
+        {done && <FinishCard onFinish={onFinish} />}
+        <div style={{ height:12 }} />
+      </div>
+
+      {!done && <ConvoDock mode={mode} kb={kb} setKb={setKb} draft={draft} setDraft={setDraft}
+        sendDraft={sendDraft} startListen={startListen} stopListen={stopListen} quick={quick}
+        onQuick={(t)=>{ setMsgs(m=>[...m,{role:'user',voice:false,text:t,id:Date.now()}]); const sc=(C[nextIdx]&&C[nextIdx].role==='user'); const ci=sc?nextIdx+1:nextIdx; setNextIdx(ci); setTimeout(()=>coachReply(ci,t,false),350); }} />}
+    </div>
+  );
+}
+
+function Bubble({ m }) {
+  if (m.role === 'coach') {
+    return (
+      <div className="rise" style={{ display:'flex', gap:10, alignItems:'flex-end' }}>
+        <CoachOrb size={28} />
+        <div style={{ maxWidth:'82%' }}>
+          {m.tag && <div style={{ display:'inline-flex', alignItems:'center', gap:5, marginBottom:6, marginLeft:2,
+            fontSize:11, fontWeight:700, color:'var(--terra)' }}><window.IcSpark size={12}/>{m.tag}</div>}
+          <div className="card" style={{ padding:'14px 16px', borderTopLeftRadius:6, fontSize:15, lineHeight:1.62, whiteSpace:'pre-line' }}>{m.text}</div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="rise" style={{ display:'flex', justifyContent:'flex-end' }}>
+      <div style={{ maxWidth:'82%', background:'var(--terra)', color:'#fff', padding:'13px 16px',
+        borderRadius:'20px 20px 6px 20px', boxShadow:'0 5px 14px rgba(197,97,58,0.26)' }}>
+        {m.voice && (
+          <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom:9, opacity:.92 }}>
+            <window.IcMic size={14}/><window.WaveBars n={20} h={16} color="rgba(255,255,255,0.85)" seed={String(m.text).length}/>
+          </div>
+        )}
+        <div style={{ fontSize:15, lineHeight:1.6 }}>{m.text}</div>
+      </div>
+    </div>
+  );
+}
+
+function ConvoDock({ mode, kb, setKb, draft, setDraft, sendDraft, startListen, stopListen, quick, onQuick }) {
+  return (
+    <div style={{ background:'var(--bg)', borderTop:'1px solid var(--line-2)', padding:'12px 18px 30px' }}>
+      {quick && mode==='idle' && !kb && (
+        <div style={{ display:'flex', gap:8, marginBottom:13, flexWrap:'wrap', justifyContent:'center' }}>
+          {quick.map(q=>(
+            <button key={q} className="tap" onClick={()=>onQuick(q)} style={{ border:'1px solid var(--line)', background:'var(--paper)',
+              color:'var(--ink-2)', borderRadius:999, padding:'9px 15px', fontSize:13.5, fontWeight:600, cursor:'pointer', fontFamily:'var(--sans)' }}>{q}</button>
+          ))}
+        </div>
+      )}
+
+      {kb ? (
+        <div style={{ display:'flex', alignItems:'flex-end', gap:9 }}>
+          <button className="tap" onClick={()=>setKb(false)} style={{ border:'none', background:'var(--paper)', width:46, height:46, borderRadius:'50%',
+            display:'grid', placeItems:'center', boxShadow:'var(--shadow-card)', color:'var(--terra)', cursor:'pointer', flexShrink:0 }}>
+            <window.IcMic size={20}/>
+          </button>
+          <div style={{ flex:1, display:'flex', alignItems:'flex-end', background:'var(--paper)', borderRadius:24, boxShadow:'var(--shadow-card)', padding:'4px 4px 4px 16px' }}>
+            <textarea value={draft} onChange={e=>setDraft(e.target.value)} rows={1} placeholder="직접 입력해 보세요…"
+              onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendDraft(); } }}
+              style={{ flex:1, border:'none', outline:'none', resize:'none', background:'none', fontFamily:'var(--sans)',
+                fontSize:15, lineHeight:1.5, padding:'9px 0', maxHeight:90, color:'var(--ink)' }} />
+            <button className="tap" onClick={sendDraft} disabled={!draft.trim()} style={{ border:'none', width:38, height:38, borderRadius:'50%', flexShrink:0,
+              background: draft.trim()?'var(--terra)':'var(--line)', color:'#fff', display:'grid', placeItems:'center', cursor:'pointer', marginBottom:1 }}>
+              <window.IcArrowU size={19}/>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:0, position:'relative' }}>
+          <button className="tap" onClick={()=>setKb(true)} style={{ position:'absolute', left:0, border:'none', background:'var(--paper)', width:46, height:46, borderRadius:'50%',
+            display:'grid', placeItems:'center', boxShadow:'var(--shadow-card)', color:'var(--ink-2)', cursor:'pointer' }}>
+            <window.IcKeyb size={20}/>
+          </button>
+          <MicButton mode={mode} onStart={startListen} onStop={stopListen} />
+          <div style={{ position:'absolute', right:0, textAlign:'center', width:46 }}>
+            <div className="faint" style={{ fontSize:10.5, fontWeight:600, lineHeight:1.35 }}>
+              <div>탭하여</div><div>{mode==='listening' ? '완료' : '말하기'}</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MicButton({ mode, onStart, onStop }) {
+  const listening = mode==='listening';
+  const busy = mode==='thinking';
+  return (
+    <button className="tap" disabled={busy} onClick={listening?onStop:onStart} style={{
+      position:'relative', width:74, height:74, borderRadius:'50%', border:'none', cursor: busy?'default':'pointer',
+      background: listening ? 'linear-gradient(135deg,#A84E2C,#8f3f22)' : 'linear-gradient(135deg,#C5613A,#A84E2C)',
+      boxShadow:'0 10px 24px rgba(168,78,44,0.4)', display:'grid', placeItems:'center', color:'#fff', opacity: busy?.5:1 }}>
+      {listening && [0,1].map(i=>(
+        <span key={i} style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid var(--terra)',
+          animation:`ring 1.8s ${i*0.9}s ease-out infinite` }} />
+      ))}
+      {listening
+        ? <span style={{ width:22, height:22, borderRadius:6, background:'#fff' }} />
+        : <window.IcMic size={30}/>}
+    </button>
+  );
+}
+
+function FinishCard({ onFinish }) {
+  return (
+    <div className="rise card" style={{ marginTop:22, padding:'22px 20px', textAlign:'center',
+      background:'linear-gradient(160deg, #FBF7EF, #F4E7D8)' }}>
+      <div style={{ width:46, height:46, borderRadius:15, margin:'0 auto 12px', display:'grid', placeItems:'center',
+        background:'var(--terra-soft)', color:'var(--terra-d)' }}><window.IcBook size={24}/></div>
+      <div className="serif" style={{ fontSize:18, fontWeight:600 }}>오늘 이야기, 잘 들었어요</div>
+      <div className="muted" style={{ fontSize:13.5, lineHeight:1.6, marginTop:7, maxWidth:250, marginInline:'auto' }}>
+        나눈 이야기를 일기로 정리하고, 인사이트와 감정, 내일 이어갈 일들을 뽑아둘게요.
+      </div>
+      <button className="btn btn-primary" onClick={onFinish} style={{ marginTop:18, width:'100%' }}>
+        <window.IcSpark size={18}/> 오늘의 일기 정리하기
+      </button>
+    </div>
+  );
+}
+
+Object.assign(window, { ConvoScreen });
+  </script>
+
+  <!-- screen-diary -->
+  <script type="text/babel" data-presets="react">
+/* screen-diary — today's generated diary, insights, emotions */
+function DiaryScreen({ onBack, onAddTodos, addedTodos }) {
+  const D = window.DIARY;
+  const e = window.EMO[D.primary];
+
+  return (
+    <div className="screen" style={{ paddingBottom:40 }}>
+      <div style={{ background:`linear-gradient(165deg, ${`color-mix(in srgb, ${e.color} 22%, #FBF7EF)`} 0%, var(--bg) 78%)`,
+        padding:'58px 22px 22px' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <button className="tap" onClick={onBack} style={{ border:'none', background:'var(--paper)', width:38, height:38,
+            borderRadius:'50%', display:'grid', placeItems:'center', boxShadow:'var(--shadow-card)', color:'var(--ink-2)', cursor:'pointer' }}>
+            <window.IcChevL size={19}/>
+          </button>
+          <span className="pill" style={{ background:'var(--paper)', boxShadow:'var(--shadow-card)', color:'var(--ink-2)' }}>
+            <window.IcBook size={13}/> 오늘의 일기
+          </span>
+          <div style={{ width:38 }} />
+        </div>
+        <div style={{ marginTop:20 }}>
+          <div className="faint" style={{ fontSize:13, fontWeight:600 }}>{D.dateLabel}</div>
+          <h1 className="serif" style={{ margin:'8px 0 0', fontSize:25, fontWeight:600, lineHeight:1.38, letterSpacing:'-0.01em' }}>{D.title}</h1>
+          <div style={{ marginTop:15 }}><window.MoodArc arc={D.moodArc} /></div>
+        </div>
+      </div>
+
+      <div style={{ padding:'8px 20px 0' }}>
+        <div className="card" style={{ padding:'22px 21px', position:'relative' }}>
+          <window.IcQuote size={26} style={{ color:'var(--terra-soft)', position:'absolute', top:16, right:18 }} />
+          <p className="serif" style={{ margin:0, fontSize:15.5, lineHeight:1.95, whiteSpace:'pre-line', color:'#403A32' }}>{D.body}</p>
+          <div style={{ display:'flex', gap:7, marginTop:18, flexWrap:'wrap' }}>
+            {D.tags.map(t=><window.Tag key={t}>{t}</window.Tag>)}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding:'26px 20px 0' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:13, padding:'0 2px' }}>
+          <window.IcSpark size={17} style={{ color:'var(--terra)' }} />
+          <span className="sec-label" style={{ color:'var(--ink-2)' }}>오늘 길어올린 것</span>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:11 }}>
+          {D.insights.map((ins,i)=><window.InsightCard key={i} ins={ins} delay={i*90} />)}
+        </div>
+      </div>
+
+      <div style={{ padding:'26px 20px 0' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:13, padding:'0 2px' }}>
+          <window.IcHeart size={17} style={{ color:'var(--terra)' }} />
+          <span className="sec-label" style={{ color:'var(--ink-2)' }}>감정 돌봄</span>
+        </div>
+        <div className="card" style={{ padding:'19px 20px', display:'flex', gap:16, alignItems:'center' }}>
+          <div style={{ width:58, height:58, borderRadius:'50%', flexShrink:0, display:'grid', placeItems:'center',
+            background:`color-mix(in srgb, ${e.color} 18%, var(--paper))`, color:e.color, fontSize:22 }}>
+            <window.IcSun size={28}/>
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:e.color }}>지금의 마음 · {e.label}</div>
+            <div style={{ fontSize:14, lineHeight:1.6, marginTop:5, color:'var(--ink)' }}>
+              긴장으로 시작했지만 <b>뿌듯함과 후련함</b>으로 마무리했어요. 운동을 못 한 작은 아쉬움도 스스로를 챙기려는 마음이에요.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding:'26px 20px 0' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:7, padding:'0 2px' }}>
+          <window.IcCheck size={17} style={{ color:'var(--terra)' }} />
+          <span className="sec-label" style={{ color:'var(--ink-2)' }}>내일로 이어갈 일</span>
+        </div>
+        <div className="faint" style={{ fontSize:12.5, lineHeight:1.5, padding:'0 2px', marginBottom:12 }}>대화에서 코치가 제안했어요. 추가하면 내일 할 일에 담겨요.</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+          {D.carryTodos.map((t,i)=>{
+            const added = addedTodos.includes(t);
+            return (
+              <div key={i} className="card" style={{ padding:'13px 15px', display:'flex', alignItems:'center', gap:12 }}>
+                <window.IcSeed size={18} style={{ color:'var(--sage)', flexShrink:0 }} />
+                <span style={{ flex:1, fontSize:14.5, lineHeight:1.45 }}>{t}</span>
+                <button className="tap" onClick={()=>!added && onAddTodos(t)} style={{ border:'none', cursor: added?'default':'pointer',
+                  background: added?'var(--sage-soft)':'var(--terra)', color: added?'var(--sage-d)':'#fff',
+                  borderRadius:999, padding:'7px 13px', fontSize:12.5, fontWeight:700, display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
+                  {added ? <>담김 ✓</> : <><window.IcPlus size={14}/>추가</>}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ padding:'28px 20px 0' }}>
+        <button className="btn btn-ghost" onClick={onBack} style={{ width:'100%' }}>홈으로 돌아가기</button>
+      </div>
+    </div>
+  );
+}
+Object.assign(window, { DiaryScreen });
+  </script>
+
+  <!-- screen-monthly -->
+  <script type="text/babel" data-presets="react">
+/* screen-monthly — monthly review */
+function MonthlyScreen() {
+  const days = window.MONTH_DAYS;
+  const dist = window.MONTH_EMO_DIST;
+  const cats = window.MONTH_CATS;
+  const total = dist.reduce((s,d)=>s+d.n,0);
+  const maxN = Math.max(...dist.map(d=>d.n));
+  const firstDow = 1;
+  const recorded = days.filter(d=>d.mood).length;
+
+  return (
+    <div className="screen" style={{ paddingBottom:118 }}>
+      <div style={{ padding:'70px 22px 6px' }}>
+        <div className="sec-label">월별 회고</div>
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:8 }}>
+          <window.IcChevL size={20} style={{ color:'var(--ink-3)' }} />
+          <h1 className="serif" style={{ margin:0, fontSize:28, fontWeight:600 }}>2026 · 6월</h1>
+          <window.IcChevR size={20} style={{ color:'var(--ink-3)' }} />
+        </div>
+        <div className="muted" style={{ fontSize:13.5, marginTop:6 }}>이번 달 <b style={{color:'var(--terra)'}}>{recorded}일</b> 기록했어요. 꾸준함이 쌓이고 있어요.</div>
+      </div>
+
+      <div style={{ padding:'16px 18px 0' }}>
+        <div className="card" style={{ padding:'18px 18px 20px' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:6, marginBottom:8 }}>
+            {['월','화','수','목','금','토','일'].map(d=>(
+              <div key={d} className="faint" style={{ textAlign:'center', fontSize:11, fontWeight:600 }}>{d}</div>
+            ))}
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:6 }}>
+            {Array.from({length:firstDow}).map((_,i)=><div key={'p'+i} />)}
+            {days.map(d=>{
+              const e = d.mood ? window.EMO[d.mood] : null;
+              const today = d.day===14;
+              return (
+                <div key={d.day} style={{ aspectRatio:'1', borderRadius:11, display:'grid', placeItems:'center', position:'relative',
+                  background: e ? `color-mix(in srgb, ${e.color} 20%, var(--paper))` : 'var(--paper-2)',
+                  border: today ? '2px solid var(--terra)' : '1px solid transparent' }}>
+                  <span style={{ fontSize:12, fontWeight: today?700:600, color: e ? `color-mix(in srgb, ${e.color} 55%, var(--ink))` : 'var(--ink-3)' }}>{d.day}</span>
+                  {e && <span style={{ position:'absolute', bottom:5, width:5, height:5, borderRadius:'50%', background:e.color }} />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding:'22px 18px 0' }}>
+        <window.SectionHead label="이번 달 감정 분포" />
+        <div className="card" style={{ padding:'18px 19px' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:13 }}>
+            {dist.map(d=>{
+              const e = window.EMO[d.key];
+              return (
+                <div key={d.key} style={{ display:'flex', alignItems:'center', gap:12 }}>
+                  <div style={{ width:42, fontSize:13, fontWeight:600, color:'var(--ink-2)' }}>{e.label}</div>
+                  <div style={{ flex:1, height:10, borderRadius:6, background:'var(--paper-2)', overflow:'hidden' }}>
+                    <div style={{ width:`${(d.n/maxN)*100}%`, height:'100%', borderRadius:6, background:e.color,
+                      transition:'width .6s ease' }} />
+                  </div>
+                  <div className="faint" style={{ width:30, textAlign:'right', fontSize:12.5, fontWeight:600 }}>{d.n}일</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding:'24px 18px 0' }}>
+        <window.SectionHead label="카테고리별 흐름" />
+        <div style={{ display:'flex', flexDirection:'column', gap:11 }}>
+          {cats.map((c,i)=>(
+            <div key={i} className="card" style={{ padding:'17px 18px' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:9 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+                  <span style={{ width:10, height:10, borderRadius:3, background:c.color }} />
+                  <span style={{ fontSize:15, fontWeight:700 }}>{c.name}</span>
+                </div>
+                <span className="faint" style={{ fontSize:12.5, fontWeight:600 }}>{c.n}개 기록</span>
+              </div>
+              <div style={{ fontSize:13.5, lineHeight:1.62, color:'var(--ink)', display:'flex', gap:8 }}>
+                <window.IcSpark size={15} style={{ color:c.color, flexShrink:0, marginTop:2 }} />
+                <span>{c.insight}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding:'24px 18px 0' }}>
+        <window.SectionHead label="이번 달의 단어들" />
+        <div className="card" style={{ padding:'18px 18px 20px' }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:9 }}>
+            {window.MONTH_KEYWORDS.map((k,i)=>{
+              const sizes=[22,16,19,15,18,15];
+              return <span key={k} className="serif" style={{ fontSize:sizes[i%sizes.length], fontWeight:600,
+                color:`color-mix(in srgb, var(--terra) ${30+ (i%3)*22}%, var(--ink))` }}>{k}</span>;
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+Object.assign(window, { MonthlyScreen });
+  </script>
+
+  <!-- screen-todo -->
+  <script type="text/babel" data-presets="react">
+/* screen-todo — todo list (conversation-linked) */
+function TodoScreen({ todos, setTodos }) {
+  const [carry, setCarry] = useState(window.TODOS_CARRY);
+  const [adding, setAdding] = useState('');
+
+  const toggle = (id) => setTodos(ts => ts.map(t => t.id===id ? {...t, done:!t.done} : t));
+  const toggleCarry = (id) => setCarry(cs => cs.map(t => t.id===id ? {...t, done:!t.done} : t));
+  const add = () => {
+    const text = adding.trim(); if (!text) return;
+    setTodos(ts => [...ts, { id:'n'+Date.now(), text, done:false, cat:'기타' }]);
+    setAdding('');
+  };
+  const pullCarry = (id) => {
+    const item = carry.find(c=>c.id===id); if(!item) return;
+    setCarry(cs => cs.filter(c=>c.id!==id));
+    setTodos(ts => [...ts, { ...item, id:'p'+Date.now() }]);
+  };
+
+  const done = todos.filter(t=>t.done).length;
+  const tot = todos.length;
+  const pct = tot ? Math.round(done/tot*100) : 0;
+
+  return (
+    <div className="screen" style={{ paddingBottom:118 }}>
+      <div style={{ padding:'70px 22px 6px' }}>
+        <div className="sec-label">오늘의 할 일</div>
+        <h1 className="serif" style={{ margin:'8px 0 0', fontSize:28, fontWeight:600 }}>6월 14일</h1>
+      </div>
+
+      <div style={{ padding:'16px 18px 0' }}>
+        <div className="card" style={{ padding:'18px 20px', display:'flex', alignItems:'center', gap:18 }}>
+          <ProgressRing pct={pct} />
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:16, fontWeight:700 }}>{done}개 완료 · {tot-done}개 남음</div>
+            <div className="muted" style={{ fontSize:13.5, lineHeight:1.5, marginTop:4 }}>
+              {pct===100 ? '오늘 할 일을 다 끝냈어요. 멋져요!' : '천천히 하나씩, 충분히 잘하고 있어요.'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding:'16px 18px 0' }}>
+        <div style={{ display:'flex', gap:9, alignItems:'center', background:'var(--paper)', borderRadius:18, boxShadow:'var(--shadow-card)', padding:'6px 6px 6px 16px' }}>
+          <input value={adding} onChange={e=>setAdding(e.target.value)} placeholder="할 일 추가하기"
+            onKeyDown={e=>{ if(e.key==='Enter') add(); }}
+            style={{ flex:1, border:'none', outline:'none', background:'none', fontFamily:'var(--sans)', fontSize:15, padding:'10px 0', color:'var(--ink)' }} />
+          <button className="tap" onClick={add} disabled={!adding.trim()} style={{ border:'none', width:40, height:40, borderRadius:'50%',
+            background: adding.trim()?'var(--terra)':'var(--line)', color:'#fff', display:'grid', placeItems:'center', cursor:'pointer' }}>
+            <window.IcPlus size={20}/>
+          </button>
+        </div>
+      </div>
+
+      <div style={{ padding:'22px 18px 0' }}>
+        <window.SectionHead label="할 일" />
+        <div className="card" style={{ overflow:'hidden' }}>
+          {todos.map((t,i)=>(
+            <TodoRow key={t.id} t={t} last={i===todos.length-1} onToggle={()=>toggle(t.id)} />
+          ))}
+        </div>
+      </div>
+
+      {carry.length>0 && (
+        <div style={{ padding:'22px 18px 0' }}>
+          <window.SectionHead label="어제 못다 한 일" />
+          <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+            {carry.map(t=>(
+              <div key={t.id} className="card" style={{ padding:'13px 15px', display:'flex', alignItems:'center', gap:12 }}>
+                <window.IcMoon size={17} style={{ color:'var(--emo-low)', flexShrink:0 }} />
+                <span style={{ flex:1, fontSize:14.5 }}>{t.text}</span>
+                <button className="tap" onClick={()=>pullCarry(t.id)} style={{ border:'none', cursor:'pointer',
+                  background:'var(--paper-2)', color:'var(--terra)', borderRadius:999, padding:'7px 13px', fontSize:12.5, fontWeight:700,
+                  display:'flex', alignItems:'center', gap:4 }}>
+                  <window.IcArrowU size={14}/> 오늘로
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={{ padding:'22px 22px 0' }}>
+        <div className="faint" style={{ fontSize:12.5, lineHeight:1.6, textAlign:'center' }}>
+          <window.IcSpark size={13} style={{ verticalAlign:'-2px', marginRight:4 }} />
+          할 일은 코치가 당신의 하루 맥락을 이해하는 데 쓰여요.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TodoRow({ t, last, onToggle }) {
+  return (
+    <div className="tap" onClick={onToggle} style={{ display:'flex', alignItems:'center', gap:13, padding:'14px 16px',
+      borderBottom: last?'none':'1px solid var(--line-2)', cursor:'pointer' }}>
+      <span style={{ width:22, height:22, borderRadius:7, flexShrink:0, display:'grid', placeItems:'center',
+        border: t.done?'none':'1.8px solid var(--line)', background: t.done?'var(--sage)':'transparent', transition:'all .15s' }}>
+        {t.done && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>}
+      </span>
+      <span style={{ flex:1, fontSize:15, lineHeight:1.4, color: t.done?'var(--ink-3)':'var(--ink)',
+        textDecoration: t.done?'line-through':'none', textDecorationColor:'var(--ink-3)' }}>{t.text}</span>
+      {t.from==='대화' && <span className="pill" style={{ background:'var(--gold-soft)', color:'#9A7420', fontSize:10.5, padding:'3px 9px', gap:3 }}>
+        <window.IcMic size={11}/> 대화</span>}
+      <span className="faint" style={{ fontSize:11.5, fontWeight:600 }}>{t.cat}</span>
+    </div>
+  );
+}
+
+function ProgressRing({ pct }) {
+  const r=26, c=2*Math.PI*r, off=c*(1-pct/100);
+  return (
+    <div style={{ position:'relative', width:64, height:64, flexShrink:0 }}>
+      <svg width="64" height="64" style={{ transform:'rotate(-90deg)' }}>
+        <circle cx="32" cy="32" r={r} fill="none" stroke="var(--paper-2)" strokeWidth="7" />
+        <circle cx="32" cy="32" r={r} fill="none" stroke="var(--terra)" strokeWidth="7" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={off} style={{ transition:'stroke-dashoffset .5s ease' }} />
+      </svg>
+      <div style={{ position:'absolute', inset:0, display:'grid', placeItems:'center', fontSize:15, fontWeight:700, color:'var(--terra)' }}>{pct}%</div>
+    </div>
+  );
+}
+
+Object.assign(window, { TodoScreen, ProgressRing });
+  </script>
+
+  <!-- app shell -->
+  <script type="text/babel" data-presets="react">
+/* app — shell, tab navigation, state */
+function TabBar({ tab, setTab, onRecord }) {
+  const items = [
+    { key:'home',    label:'홈',   Icon: window.IcHome },
+    { key:'todo',    label:'할 일', Icon: window.IcCheck },
+    { key:'__fab',   label:'',     Icon: null },
+    { key:'monthly', label:'회고', Icon: window.IcCal },
+    { key:'diary',   label:'일기', Icon: window.IcBook },
+  ];
+  return (
+    <div style={{ position:'absolute', left:0, right:0, bottom:0, zIndex:40, paddingBottom:14, paddingInline:14,
+      pointerEvents:'none' }}>
+      <div style={{ position:'relative', pointerEvents:'auto', display:'flex', alignItems:'center',
+        background:'rgba(251,247,239,0.86)', backdropFilter:'blur(18px) saturate(160%)', WebkitBackdropFilter:'blur(18px) saturate(160%)',
+        borderRadius:30, boxShadow:'0 6px 24px rgba(51,48,43,0.14), 0 0 0 1px rgba(51,48,43,0.04)', padding:'9px 8px 8px' }}>
+        {items.map(it => {
+          if (it.key==='__fab') return <div key="fab" style={{ width:70 }} />;
+          const on = tab===it.key;
+          return (
+            <button key={it.key} className="tap" onClick={()=>setTab(it.key)} style={{ flex:1, border:'none', background:'none',
+              display:'flex', flexDirection:'column', alignItems:'center', gap:3, cursor:'pointer', padding:'4px 0',
+              color: on?'var(--terra)':'var(--ink-3)' }}>
+              <it.Icon size={23} sw={on?2.1:1.8} />
+              <span style={{ fontSize:10.5, fontWeight: on?700:600 }}>{it.label}</span>
+            </button>
+          );
+        })}
+        <button className="tap" onClick={onRecord} style={{ position:'absolute', left:'50%', top:-20, transform:'translateX(-50%)',
+          width:62, height:62, borderRadius:'50%', border:'4px solid var(--bg)', cursor:'pointer',
+          background:'linear-gradient(135deg,#C5613A,#A84E2C)', color:'#fff', display:'grid', placeItems:'center',
+          boxShadow:'0 8px 20px rgba(168,78,44,0.42)' }}>
+          <window.IcMic size={26}/>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DiaryEmpty({ onRecord }) {
+  return (
+    <div className="screen" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', textAlign:'center', padding:'0 40px 80px' }}>
+      <div style={{ width:74, height:74, borderRadius:24, display:'grid', placeItems:'center', background:'var(--paper)', boxShadow:'var(--shadow-card)', color:'var(--terra)', marginBottom:20 }}>
+        <window.IcBook size={36}/>
+      </div>
+      <div className="serif" style={{ fontSize:20, fontWeight:600 }}>아직 오늘 일기가 없어요</div>
+      <div className="muted" style={{ fontSize:14, lineHeight:1.6, marginTop:8 }}>코치와 잠깐 이야기하면<br/>일기와 인사이트로 정리해드려요.</div>
+      <button className="btn btn-primary" onClick={onRecord} style={{ marginTop:22 }}>
+        <window.IcMic size={18}/> 오늘 기록 시작하기
+      </button>
+    </div>
+  );
+}
+
+function App() {
+  const [tab, setTab] = useState('home');
+  const [overlay, setOverlay] = useState(null);
+  const [todayDone, setTodayDone] = useState(false);
+  const [todos, setTodos] = useState(window.TODOS_TODAY);
+  const [addedTodos, setAddedTodos] = useState([]);
+
+  const record = () => setOverlay('convo');
+  const finishConvo = () => {
+    setTodayDone(true);
+    setOverlay('diary');
+  };
+  const addTodoFromDiary = (text) => {
+    setAddedTodos(a => [...a, text]);
+    setTodos(ts => [...ts, { id:'d'+Date.now(), text, done:false, cat: text.includes('걷')||text.includes('운동')?'건강':'업무', from:'대화' }]);
+  };
+
+  let screen;
+  if (tab==='home') screen = <window.HomeScreen todayDone={todayDone} todos={todos}
+    onRecord={record} onOpenDiary={()=>setOverlay('diary')} onGoTodo={()=>setTab('todo')} onGoMonthly={()=>setTab('monthly')} />;
+  else if (tab==='todo') screen = <window.TodoScreen todos={todos} setTodos={setTodos} />;
+  else if (tab==='monthly') screen = <window.MonthlyScreen />;
+  else if (tab==='diary') screen = todayDone
+    ? <window.DiaryScreen onBack={()=>setTab('home')} onAddTodos={addTodoFromDiary} addedTodos={addedTodos} />
+    : <DiaryEmpty onRecord={record} />;
+
+  return (
+    <div className="app-root" style={{ position:'relative', height:'100%' }}>
+      {screen}
+      <TabBar tab={tab} setTab={setTab} onRecord={record} />
+
+      {overlay==='convo' && <window.ConvoScreen onClose={()=>setOverlay(null)} onFinish={finishConvo} />}
+      {overlay==='diary' && (
+        <div style={{ position:'absolute', inset:0, zIndex:70, background:'var(--bg)' }}>
+          <window.DiaryScreen onBack={()=>{ setOverlay(null); setTab('home'); }} onAddTodos={addTodoFromDiary} addedTodos={addedTodos} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+Object.assign(window, { App, TabBar });
+  </script>
+
+  <!-- root render -->
+  <script type="text/babel" data-presets="react">
+const W = 402, H = 874;
+function Root() {
+  const [scale, setScale] = React.useState(1);
+  React.useEffect(() => {
+    const fit = () => {
+      const m = 24;
+      const s = Math.min((window.innerWidth - m*2) / W, (window.innerHeight - m*2) / H, 1);
+      setScale(s);
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, []);
+  return (
+    <div style={{ transform:`scale(${scale})`, transformOrigin:'center center' }}>
+      <window.IOSDevice width={W} height={H}>
+        <div className="device-screen">
+          <window.App />
+        </div>
+      </window.IOSDevice>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('stage')).render(<Root />);
+  </script>
+</body>
+</html>
