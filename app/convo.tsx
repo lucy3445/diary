@@ -108,11 +108,12 @@ export default function ConvoScreen() {
 
       setMsgs(m => [...m, { id: Date.now() + 1, role: 'coach', text: coachText }]);
       if (isDone) setDone(true);
-    } catch {
+    } catch (e: any) {
+      const msg = String(e?.message || e).replace(/key=[^&\s]+/, 'key=***');
       setMsgs(m => [...m, {
         id: Date.now() + 1,
         role: 'coach',
-        text: '잠깐, 연결이 끊겼어요. 다시 한 번 이야기해 주실 수 있어요?',
+        text: `[오류] ${msg}`,
       }]);
     } finally {
       setMode('idle');
