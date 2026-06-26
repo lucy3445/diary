@@ -19,7 +19,7 @@
     "expo-splash-screen": "~0.30.0",
     "@expo-google-fonts/noto-serif-kr": "^0.2.3",
     "react": "19.0.0",
-    "react-native": "0.79.2",
+    "react-native": "0.81.4",
     "react-native-svg": "~15.11.0",
     "react-native-reanimated": "~3.17.0",
     "react-native-safe-area-context": "5.4.0",
