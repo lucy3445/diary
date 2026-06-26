@@ -39,7 +39,7 @@ export default function TabBar({ state, navigation }: BottomTabBarProps) {
               }}
               activeOpacity={0.7}
             >
-              <tab.Icon!
+              <tab.Icon
                 size={23}
                 color={active ? Colors.terra : Colors.ink3}
                 strokeWidth={active ? 2.1 : 1.8}
