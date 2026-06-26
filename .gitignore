@@ -12,3 +12,4 @@ web-build/
 *.pem
 android/
 ios/
+constants/config.ts
