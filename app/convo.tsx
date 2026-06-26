@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadow, Radius } from '../constants/Colors';
 import { useApp } from '../context/AppContext';
 import { IcClose, IcMic, IcKeyb, IcArrowU, IcSpark, IcBook } from '../components/Icons';
-import { sendToCoach, GeminiMsg } from '../services/gemini';
+import { sendToCoach, ChatTurn } from '../services/gemini';
 
 const OPENING = '안녕하세요! 오늘 하루 어떠셨어요? 기억에 남는 일이 있으면 편하게 이야기해 주세요.';
 const QUICK_CHIPS = ['좋았어요', '힘들었어요', '그냥 그랬어요', '바빴어요'];
@@ -73,7 +73,7 @@ export default function ConvoScreen() {
   const { setTodayDone } = useApp();
 
   const [msgs, setMsgs] = useState<Msg[]>([{ id: 0, role: 'coach', text: OPENING }]);
-  const [geminiHistory, setGeminiHistory] = useState<GeminiMsg[]>([]);
+  const [geminiHistory, setGeminiHistory] = useState<ChatTurn[]>([]);
   const [mode, setMode] = useState<Mode>('idle');
   const [kb, setKb] = useState(true);
   const [draft, setDraft] = useState('');
@@ -99,10 +99,10 @@ export default function ConvoScreen() {
     try {
       const { text: coachText, done: isDone } = await sendToCoach(geminiHistory, text);
 
-      const newHistory: GeminiMsg[] = [
+      const newHistory: ChatTurn[] = [
         ...geminiHistory,
-        { role: 'user', parts: [{ text }] },
-        { role: 'model', parts: [{ text: coachText }] },
+        { role: 'user', text },
+        { role: 'model', text: coachText },
       ];
       setGeminiHistory(newHistory);
 
