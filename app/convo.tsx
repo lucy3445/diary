@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadow, Radius } from '../constants/Colors';
 import { useApp } from '../context/AppContext';
 import { IcClose, IcMic, IcKeyb, IcArrowU, IcSpark, IcBook } from '../components/Icons';
-import { sendToCoach, ChatTurn } from '../services/gemini';
+import { sendToCoach, generateDiary, ChatTurn } from '../services/gemini';
 
 const OPENING = '안녕하세요! 오늘 하루 어떠셨어요? 기억에 남는 일이 있으면 편하게 이야기해 주세요.';
 const QUICK_CHIPS = ['좋았어요', '힘들었어요', '그냥 그랬어요', '바빴어요'];
@@ -70,7 +70,7 @@ interface Msg { id: number | string; role: 'coach' | 'user'; text: string; }
 export default function ConvoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { setTodayDone } = useApp();
+  const { setTodayDone, setDiaryData } = useApp();
 
   const [msgs, setMsgs] = useState<Msg[]>([{ id: 0, role: 'coach', text: OPENING }]);
   const [geminiHistory, setGeminiHistory] = useState<ChatTurn[]>([]);
@@ -78,6 +78,7 @@ export default function ConvoScreen() {
   const [kb, setKb] = useState(true);
   const [draft, setDraft] = useState('');
   const [done, setDone] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [showQuick, setShowQuick] = useState(true);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -120,7 +121,17 @@ export default function ConvoScreen() {
     }
   };
 
-  const finishConvo = () => {
+  const finishConvo = async () => {
+    if (generating) return;
+    setGenerating(true);
+    try {
+      const diary = await generateDiary(geminiHistory);
+      setDiaryData(diary);
+    } catch (e) {
+      // navigate anyway even if diary generation fails
+    } finally {
+      setGenerating(false);
+    }
     setTodayDone(true);
     router.replace('/(tabs)/diary');
   };
@@ -187,9 +198,9 @@ export default function ConvoScreen() {
               </View>
               <Text style={styles.finishTitle}>오늘 이야기, 잘 들었어요</Text>
               <Text style={styles.finishDesc}>나눈 이야기를 일기로 정리하고, 인사이트와 감정, 내일 이어갈 일들을 뽑아둘게요.</Text>
-              <TouchableOpacity style={styles.finishBtn} onPress={finishConvo} activeOpacity={0.85}>
+              <TouchableOpacity style={styles.finishBtn} onPress={finishConvo} activeOpacity={0.85} disabled={generating}>
                 <IcSpark size={18} color="#fff" />
-                <Text style={styles.finishBtnText}>오늘의 일기 정리하기</Text>
+                <Text style={styles.finishBtnText}>{generating ? '일기 정리 중…' : '오늘의 일기 정리하기'}</Text>
               </TouchableOpacity>
             </View>
           )}

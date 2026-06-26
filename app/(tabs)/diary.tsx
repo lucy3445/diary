@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-nati
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadow, Radius } from '../../constants/Colors';
-import { DIARY, EMO } from '../../constants/Data';
+import { DIARY, EMO, MoodKey } from '../../constants/Data';
 import { useApp } from '../../context/AppContext';
 import { IcBook, IcMic, IcChevL, IcSpark, IcHeart, IcCheck, IcSeed, IcPlus, IcSun, IcQuote } from '../../components/Icons';
 import { MoodArc } from '../../components/MoodChip';
@@ -29,9 +29,16 @@ function DiaryEmpty() {
 function DiaryDetail() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { addedTodos, addTodoFromDiary } = useApp();
-  const D = DIARY;
-  const e = EMO[D.primary];
+  const { addedTodos, addTodoFromDiary, diaryData } = useApp();
+  const D = diaryData ?? DIARY;
+  const primaryKey = (D.primary as MoodKey) in EMO ? (D.primary as MoodKey) : 'joy';
+  const e = EMO[primaryKey];
+
+  const today = new Date();
+  const dateLabel = diaryData
+    ? today.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })
+    : DIARY.dateLabel;
+  const moodArc = (D.moodArc as MoodKey[]).filter(m => m in EMO);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -48,10 +55,10 @@ function DiaryDetail() {
           <View style={{ width: 38 }} />
         </View>
         <View style={{ marginTop: 20 }}>
-          <Text style={styles.dateLabel}>{D.dateLabel}</Text>
+          <Text style={styles.dateLabel}>{dateLabel}</Text>
           <Text style={styles.diaryTitle}>{D.title}</Text>
           <View style={{ marginTop: 15 }}>
-            <MoodArc arc={D.moodArc} />
+            <MoodArc arc={moodArc} />
           </View>
         </View>
       </View>

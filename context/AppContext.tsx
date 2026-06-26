@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Todo, TODOS_TODAY } from '../constants/Data';
+import { DiaryData } from '../services/gemini';
 
 interface AppState {
   todayDone: boolean;
@@ -8,6 +9,8 @@ interface AppState {
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   addedTodos: string[];
   addTodoFromDiary: (text: string) => void;
+  diaryData: DiaryData | null;
+  setDiaryData: (d: DiaryData) => void;
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -16,6 +19,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [todayDone, setTodayDone] = useState(false);
   const [todos, setTodos] = useState<Todo[]>(TODOS_TODAY);
   const [addedTodos, setAddedTodos] = useState<string[]>([]);
+  const [diaryData, setDiaryData] = useState<DiaryData | null>(null);
 
   const addTodoFromDiary = (text: string) => {
     setAddedTodos(a => [...a, text]);
@@ -29,7 +33,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ todayDone, setTodayDone, todos, setTodos, addedTodos, addTodoFromDiary }}>
+    <AppContext.Provider value={{ todayDone, setTodayDone, todos, setTodos, addedTodos, addTodoFromDiary, diaryData, setDiaryData }}>
       {children}
     </AppContext.Provider>
   );

@@ -1,6 +1,7 @@
 import { GEMINI_API_KEY } from '../constants/config';
 
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+const MODEL = 'gemini-2.5-flash';
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM = `당신은 "하루" 앱의 따뜻한 일상 코치예요. 사용자가 오늘 하루를 돌아보고 마음을 정리할 수 있도록 대화로 도와줘요.
 
@@ -20,23 +21,29 @@ const SYSTEM = `당신은 "하루" 앱의 따뜻한 일상 코치예요. 사용�
 
 export type ChatTurn = { role: 'user' | 'model'; text: string };
 
-export async function sendToCoach(history: ChatTurn[], userText: string): Promise<{ text: string; done: boolean }> {
-  const contents = [
-    ...history.map(h => ({
-      role: h.role,
-      parts: [{ text: h.text }],
-    })),
-    { role: 'user', parts: [{ text: userText }] },
-  ];
+export type DiaryData = {
+  title: string;
+  moodArc: string[];
+  primary: string;
+  body: string;
+  insights: { type: 'learn' | 'keep' | 'fix'; text: string }[];
+  tags: string[];
+  carryTodos: string[];
+};
+
+async function callGemini(contents: object[], systemInstruction?: string, maxTokens = 300): Promise<string> {
+  const body: Record<string, unknown> = {
+    contents,
+    generationConfig: { maxOutputTokens: maxTokens, temperature: 0.8 },
+  };
+  if (systemInstruction) {
+    body.system_instruction = { parts: [{ text: systemInstruction }] };
+  }
 
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: SYSTEM }] },
-      contents,
-      generationConfig: { maxOutputTokens: 300, temperature: 0.8 },
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -45,7 +52,34 @@ export async function sendToCoach(history: ChatTurn[], userText: string): Promis
   }
 
   const data = await res.json();
-  const raw: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+}
+
+export async function sendToCoach(history: ChatTurn[], userText: string): Promise<{ text: string; done: boolean }> {
+  const contents = [
+    ...history.map(h => ({ role: h.role, parts: [{ text: h.text }] })),
+    { role: 'user', parts: [{ text: userText }] },
+  ];
+
+  const raw = await callGemini(contents, SYSTEM, 300);
   const done = raw.includes('[DONE]');
   return { text: raw.replace('[DONE]', '').trim(), done };
+}
+
+export async function generateDiary(history: ChatTurn[]): Promise<DiaryData> {
+  const convoText = history
+    .map(h => `${h.role === 'user' ? '사용자' : '코치'}: ${h.text}`)
+    .join('\n');
+
+  const prompt = `다음은 사용자와 코치의 대화예요:\n\n${convoText}\n\n위 대화를 바탕으로 오늘의 일기를 아래 JSON 형식으로 작성해주세요. JSON만 반환하고 다른 텍스트는 넣지 마세요.\n\n{\n  "title": "오늘 하루를 한 문장으로 표현한 제목 (20자 이내)",\n  "moodArc": ["감정1", "감정2"],\n  "primary": "주요 감정 하나",\n  "body": "일기 본문 (2-3문단, 사용자 1인칭 시점으로)",\n  "insights": [\n    {"type": "learn", "text": "오늘 배운 것이나 깨달은 것"},\n    {"type": "keep", "text": "계속하면 좋을 것"},\n    {"type": "fix", "text": "바꾸거나 개선할 것"}\n  ],\n  "tags": ["태그1", "태그2", "태그3"],\n  "carryTodos": ["내일 할 일1", "내일 할 일2"]\n}\n\nmoodArc와 primary는 반드시 다음 중에서만 선택하세요: joy, calm, focus, tired, anx, low`;
+
+  const raw = await callGemini(
+    [{ role: 'user', parts: [{ text: prompt }] }],
+    undefined,
+    1000,
+  );
+
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('일기 생성 실패');
+  return JSON.parse(jsonMatch[0]) as DiaryData;
 }
