@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, Animated, KeyboardAvoidingView, Platform,
+  StyleSheet, Animated, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -127,8 +127,10 @@ export default function ConvoScreen() {
     try {
       const diary = await generateDiary(geminiHistory);
       setDiaryData(diary);
-    } catch (e) {
-      // navigate anyway even if diary generation fails
+    } catch (e: any) {
+      Alert.alert('일기 생성 오류', String(e?.message || e));
+      setGenerating(false);
+      return;
     } finally {
       setGenerating(false);
     }
