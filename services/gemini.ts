@@ -80,6 +80,10 @@ export async function generateDiary(history: ChatTurn[]): Promise<DiaryData> {
   );
 
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('일기 생성 실패');
-  return JSON.parse(jsonMatch[0]) as DiaryData;
+  if (!jsonMatch) throw new Error(`JSON 없음: ${raw.slice(0, 200)}`);
+  try {
+    return JSON.parse(jsonMatch[0]) as DiaryData;
+  } catch {
+    throw new Error(`JSON 파싱 실패: ${jsonMatch[0].slice(0, 200)}`);
+  }
 }
