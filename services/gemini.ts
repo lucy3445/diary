@@ -31,7 +31,7 @@ export type DiaryData = {
   carryTodos: string[];
 };
 
-async function callGemini(contents: object[], systemInstruction?: string, maxTokens = 300): Promise<string> {
+async function callGemini(contents: object[], systemInstruction?: string, maxTokens = 300, retry = true): Promise<string> {
   const body: Record<string, unknown> = {
     contents,
     generationConfig: { maxOutputTokens: maxTokens, temperature: 0.8 },
@@ -47,8 +47,14 @@ async function callGemini(contents: object[], systemInstruction?: string, maxTok
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini error ${res.status}: ${err}`);
+    const errText = await res.text();
+    if (res.status === 429 && retry) {
+      const match = errText.match(/retry in ([\d.]+)s/);
+      const delay = match ? Math.ceil(parseFloat(match[1])) * 1000 + 1000 : 20000;
+      await new Promise(r => setTimeout(r, delay));
+      return callGemini(contents, systemInstruction, maxTokens, false);
+    }
+    throw new Error(`Gemini error ${res.status}: ${errText}`);
   }
 
   const data = await res.json();
